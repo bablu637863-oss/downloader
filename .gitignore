@@ -18,3 +18,4 @@ last_*.json
 *.m4a
 *.wav
 *.flac
+dist/

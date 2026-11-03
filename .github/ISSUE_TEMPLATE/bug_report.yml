@@ -1,0 +1,29 @@
+name: Bug report
+description: Report an installation or download problem
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not paste cookies, tokens, private URLs, settings, or history."
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Windows 10, Windows 11]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened? How can we reproduce it?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: textarea
+    id: versions
+    attributes:
+      label: Version and missing tools
+      description: Include the Downloader release and the names of missing tools; remove private paths.

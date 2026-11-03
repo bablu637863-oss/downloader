@@ -2513,6 +2513,9 @@ def trim_draw(s, e, dur, active, total=0, typing=None, unit=2, width=44):
 
 
 def read_key(fd):
+    if WINDOWS:
+        from desktop_support import windows_key
+        return windows_key()
     import select
     k = os.read(fd, 1)
     if k == b"\x1b":
@@ -2524,10 +2527,14 @@ def read_key(fd):
 
 
 def trim_ui(dur, url, cur, total=0):
-    if WINDOWS or not dur or not sys.stdin.isatty():
+    if not dur or not sys.stdin.isatty():
         return trim_manual(dur, total)
-    import termios
-    import tty
+    if WINDOWS:
+        from desktop_support import windows_terminal as termios
+        tty = termios
+    else:
+        import termios
+        import tty
     s, e = cur if cur else (0, dur)
     s, e = float(s), float(e)
     active = 0

@@ -16,4 +16,35 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install -r requirements.txt
+      - name: Install Mac media tools
+        if: runner.os == 'macOS' && matrix.python == '3.13'
+        run: brew install ffmpeg deno
+      - name: Install Windows media tools
+        if: runner.os == 'Windows' && matrix.python == '3.13'
+        run: choco install ffmpeg deno -y --no-progress
       - run: python -m unittest discover -s tests -v
+      - name: Test fresh setup without user settings changes
+        if: matrix.python == '3.13'
+        run: python setup.py --no-shortcuts
+  release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: python scripts/package_release.py
+      - name: Publish versioned source packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$(cat VERSION | tr -d '\r\n')"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; not replacing its files."
+            exit 0
+          fi
+          gh release create "$tag" dist/* --target "$GITHUB_SHA" --title "Downloader $tag - Mac and Windows" --notes-file CHANGELOG.md

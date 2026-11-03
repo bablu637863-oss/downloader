@@ -91,14 +91,48 @@ class DesktopTests(unittest.TestCase):
             spec, _ = app.make_spec('mp4', False, q, app.new_state(), 10)
         self.assertNotIn('convert', spec)
 
+    def test_console_configuration_and_cli_quit(self):
+        code = 'import downloader as a; a.configure_console(); a.main()'
+        env = dict(os.environ, DOWNLOADER_STATE_DIR=STATE.name, TERM='xterm')
+        # Homebrew speed-up prompts are unrelated to this launch/quit check.
+        code = 'import downloader as a; a.offer_speedup=lambda:None; a.main()'
+        if all(__import__('shutil').which(n) for n in ('ffmpeg','ffprobe','yt-dlp')):
+            result = subprocess.run([sys.executable, '-c', code], input='q\n', text=True,
+                                    encoding='utf-8', capture_output=True, env=env, timeout=15,
+                                    cwd=str(Path(app.__file__).parent))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('Downloader', result.stdout)
+
     def test_capture_timeout_reaps_process(self):
         r = app.capture([sys.executable, '-c', 'import time;time.sleep(20)'], timeout=.1)
         self.assertEqual(r.returncode, 124)
 
-    def test_windows_manual_trim(self):
-        with patch.object(app, 'WINDOWS', True), patch.object(app, 'trim_manual', return_value=(1, 3)) as manual:
+    def test_noninteractive_manual_trim(self):
+        with patch.object(sys.stdin, 'isatty', return_value=False), patch.object(app, 'trim_manual', return_value=(1, 3)) as manual:
             self.assertEqual(app.trim_ui(10, '', None), (1, 3))
         manual.assert_called_once()
+
+
+class SetupTests(unittest.TestCase):
+    def test_mac_shortcuts_do_not_replace_aliases(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('installer', Path(app.__file__).parent/'setup.py')
+        installer = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(installer)
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp)
+            profile = home/'.zshrc'
+            profile.write_text("alias yt='existing-tool'\n")
+            folder = installer.install_shortcuts(Path(app.__file__).parent, home=home, windows=False)
+            installer.install_shortcuts(Path(app.__file__).parent, home=home, windows=False)
+            self.assertEqual(profile.read_text().count('# Downloader user commands'), 1)
+            self.assertIn("alias yt='existing-tool'", profile.read_text())
+            self.assertTrue((folder/'yt').exists())
+            self.assertTrue((folder/'DD').exists())
+
+    def test_interactive_windows_trim_keys(self):
+        with patch.object(app, 'WINDOWS', True), patch.object(sys.stdin, 'isatty', return_value=True), patch.object(app, 'read_key', side_effect=[b'\x1b[A',b'\r']), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(app.trim_ui(10, '', None), (1, 10))
 
 
 if __name__ == '__main__':

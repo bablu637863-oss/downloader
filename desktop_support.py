@@ -39,7 +39,12 @@ def configure_console():
             if hasattr(stream, 'reconfigure'):
                 stream.reconfigure(encoding='utf-8', errors='replace')
         import ctypes
+        from ctypes import wintypes
         kernel = ctypes.windll.kernel32
+        kernel.GetStdHandle.argtypes = [wintypes.DWORD]
+        kernel.GetStdHandle.restype = wintypes.HANDLE
+        kernel.GetConsoleMode.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        kernel.SetConsoleMode.argtypes = [wintypes.HANDLE, wintypes.DWORD]
         handle = kernel.GetStdHandle(-11)
         mode = ctypes.c_ulong()
         if kernel.GetConsoleMode(handle, ctypes.byref(mode)):
@@ -135,3 +140,27 @@ class WindowsPipe:
 
 def process_options():
     return {'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP} if WINDOWS else {'start_new_session': True}
+
+
+class WindowsTerminal:
+    """getwch() already reads console keys without line buffering."""
+    TCSADRAIN = 0
+    @staticmethod
+    def tcgetattr(fd):
+        return None
+    @staticmethod
+    def tcsetattr(fd, when, state):
+        pass
+    @staticmethod
+    def setcbreak(fd):
+        pass
+
+
+windows_terminal = WindowsTerminal()
+
+
+def windows_key():
+    key = msvcrt.getwch()
+    if key in ('\x00', '\xe0'):
+        return {'H': b'\x1b[A', 'P': b'\x1b[B', 'K': b'\x1b[D', 'M': b'\x1b[C'}.get(msvcrt.getwch(), b'')
+    return key.encode('utf-8')

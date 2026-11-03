@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" role="img" aria-label="Downloader terminal layout illustration">
+<rect width="1000" height="460" rx="16" fill="#16191d"/>
+<g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="20" fill="#e6edf3">
+<rect x="30" y="28" width="320" height="58" rx="5" fill="none" stroke="#9cc9ec"/>
+<text x="65" y="65" fill="#9cc9ec">Downloader</text>
+<text x="32" y="125">Link → Format → Quality → Options → Download</text>
+<text x="32" y="180" fill="#9cc9ec">Quality</text>
+<text x="32" y="220">No.   Quality   Codec    FPS   HDR    Size</text>
+<text x="32" y="265">Choose an available original source format</text>
+<text x="32" y="320">Download  [██████████              ]</text>
+<rect x="164" y="300" width="120" height="23" fill="#49b56c"/>
+<text x="32" y="365">Downloaded / Total    Speed    Time left</text>
+<text x="32" y="405">Space: Pause / Resume</text>
+<text x="32" y="440" font-size="14" fill="#9da7b2">Layout illustration. Availability and source metadata vary by website.</text>
+</g></svg>
