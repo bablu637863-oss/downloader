@@ -21,7 +21,9 @@ jobs:
         run: brew install ffmpeg deno
       - name: Install Windows media tools
         if: runner.os == 'Windows' && matrix.python == '3.13'
-        run: choco install ffmpeg deno -y --no-progress
+        run: |
+          choco install ffmpeg deno -y --no-progress
+          "$env:ProgramData\chocolatey\lib\deno" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - run: python -m unittest discover -s tests -v
       - name: Test fresh setup without user settings changes
         if: matrix.python == '3.13'

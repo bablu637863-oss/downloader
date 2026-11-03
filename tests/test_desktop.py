@@ -47,7 +47,7 @@ class DesktopTests(unittest.TestCase):
     def test_process_suspend_resume_and_kill(self):
         counter = Path(STATE.name)/'counter'
         code = ('import time,pathlib\np=pathlib.Path('+repr(str(counter))+')\n'
-                'for i in range(200):\n p.write_text(str(i))\n time.sleep(.03)\n')
+                'for i in range(200):\n with p.open("a") as f: f.write(str(i)+"\\n")\n time.sleep(.03)\n')
         p = subprocess.Popen([sys.executable, '-c', code], **platform.process_options())
         try:
             deadline = time.monotonic()+5
@@ -61,7 +61,7 @@ class DesktopTests(unittest.TestCase):
             self.assertEqual(counter.read_text(), before)
             platform.pause_tree(p.pid, resume=True)
             time.sleep(.2)
-            self.assertGreater(int(counter.read_text()), int(before))
+            self.assertGreater(int(counter.read_text().splitlines()[-1]), int(before.splitlines()[-1]))
         finally:
             app.kill_group(p)
         self.assertIsNotNone(p.poll())
